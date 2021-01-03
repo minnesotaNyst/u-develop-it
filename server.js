@@ -28,7 +28,11 @@ const db = new sqlite3.Database('./db/election.db', err => {
 //  This method runs the SQL query and executes the callback with all the resulting rows that match the query.
 // GET all candidates
 app.get('/api/candidates', (req, res) => {
-	const sql = `SELECT * FROM candidates`;
+	const sql = `SELECT candidates.*, parties.name 
+             AS party_name 
+             FROM candidates 
+             LEFT JOIN parties 
+             ON candidates.party_id = parties.id`;
 	const params = [];
 	db.all(sql, params, (err, rows) => {
 		if (err) {
@@ -47,8 +51,12 @@ app.get('/api/candidates', (req, res) => {
 // selecting a single candidate by their primary key is the only way to ensure the candidate requested is the one that's returned.
 // This property is an object containing properties mapped to the named route “parameters”. For example, if you have the route /user/:name, then the “name” property is available as req.params.name. In this case, we are using /:id so it is available as params.id.
 app.get('/api/candidate/:id', (req, res) => {
-	const sql = `SELECT * FROM candidates 
-				 WHERE id = ?`;
+	const sql = `SELECT candidates.*, parties.name 
+             AS party_name 
+             FROM candidates 
+             LEFT JOIN parties 
+             ON candidates.party_id = parties.id 
+             WHERE candidates.id = ?`;
 	const params = [req.params.id];
 	db.get(sql, params, (err, row) => {
 		if (err) {
