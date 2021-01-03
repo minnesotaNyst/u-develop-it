@@ -121,6 +121,34 @@ app.post('/api/candidate', ({ body }, res) => {
 	});
 });
 
+// UPDATE a candidates affiliation to a party
+app.put('/api/candidate/:id', (req, res) => {
+	// If the front end will be making this request, though, then we should be extra sure that a party_id was provided before we attempt to update the database.
+	const errors = inputCheck(req.body, 'party_id');
+
+	if (errors) {
+		res.status(400).json({ error: errors });
+		return;
+	}
+
+	const sql = `UPDATE candidates SET party_id = ? 
+				 WHERE id = ?`;
+	const params = [req.body.party_id, req.params.id];
+
+	db.run(sql, params, function (err, result) {
+		if (err) {
+			res.status(400).json({ error: err.message });
+			return;
+		}
+
+		res.json({
+			message: 'success',
+			data: req.body,
+			changes: this.changes
+		});
+	});
+});
+
 // Create a candidate
 // !uncomment this out later in the module
 // const sql = `INSERT INTO candidates (id, first_name, last_name, industry_connected)
@@ -133,6 +161,56 @@ app.post('/api/candidate', ({ body }, res) => {
 // 	}
 // 	console.log(result, this.lastID);
 // });
+
+// GET all parties
+app.get('/api/parties', (req, res) => {
+	const sql = `SELECT * FROM parties`;
+	const params = [];
+	db.all(sql, params, (err, rows) => {
+		if (err) {
+			res.status(500).json({ error: err.message });
+			return;
+		}
+
+		res.json({
+			message: 'success',
+			data: rows
+		});
+	});
+});
+
+// GET a single party
+app.get('/api/party/:id', (req, res) => {
+	const sql = `SELECT * FROM parties WHERE id = ?`;
+	const params = [req.params.id];
+	db.get(sql, params, (err, row) => {
+		if (err) {
+			res.status(400).json({ error: err.message });
+			return;
+		}
+
+		res.json({
+			message: 'success',
+			data: row
+		});
+	});
+});
+
+// DELETE a party
+// Because the intention of this route is to remove a row from the table, we should use app.delete() instead of app.get().
+// We also need to use normal function syntax for the db.run() callback instead of an arrow function, or else we'd lose the context of this.changes.
+app.delete('/api/party/:id', (req, res) => {
+	const sql = `DELETE FROM parties WHERE id = ?`;
+	const params = [req.params.id];
+	db.run(sql, params, function (err, result) {
+		if (err) {
+			res.status(400).json({ error: res.message });
+			return;
+		}
+
+		res.json({ message: 'successfully deleted', changes: this.changes });
+	});
+});
 
 // Default response for any other request(Not Found) Catch all
 // !make sure this is the LAST route because it will override all of the others
