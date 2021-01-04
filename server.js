@@ -6,12 +6,14 @@ const app = express();
 
 // By adding the /api prefix here, we can remove it from the individual route expressions after we move them to their new home.
 const apiRoutes = require('./routes/apiRoutes');
-// Use apiRoutes
-app.use('/api', apiRoutes);
 
 // Express middleware
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
+
+// Use apiRoutes
+// As a reminder, this should come after your middleware...
+app.use('/api', apiRoutes);
 
 // This is a test route to see if the server connection is working
 // app.get('/', (req, res) => {
